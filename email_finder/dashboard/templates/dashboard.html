@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Finder Dashboard</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 2rem;
+    }
+    
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .card-content {
+      color: #4b5563;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: #2563eb;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background-color: #1d4ed8;
+    }
+    
+    .button-outline {
+      background-color: transparent;
+      border: 1px solid #2563eb;
+      color: #2563eb;
+    }
+    
+    .button-outline:hover {
+      background-color: rgba(37, 99, 235, 0.1);
+    }
+    
+    .button-danger {
+      background-color: #dc2626;
+    }
+    
+    .button-danger:hover {
+      background-color: #b91c1c;
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .status-connected {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status-disconnected {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .section {
+      margin-bottom: 2rem;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .section-icon {
+      margin-right: 0.5rem;
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Email Finder Dashboard</h1>
+      <div class="header-actions">
+        <a href="/dashboard" class="button">Refresh</a>
+      </div>
+    </header>
+    
+    <main>
+      <section class="section" id="notifications">
+        <!-- Dynamic notifications will appear here -->
+      </section>
+      
+      <section class="section">
+        <div class="section-header">
+          <span class="section-icon">📧</span>
+          <h2 class="section-title">Email Integrations</h2>
+        </div>
+        
+        <div class="grid">
+          <!-- Gmail Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Gmail Integration</h3>
+              <span class="status-badge status-disconnected" id="gmail-status-badge">Disconnected</span>
+            </div>
+            <div class="card-content">
+              <p>Connect your Gmail account to send emails directly from Email Finder.</p>
+              <p id="gmail-email" class="hidden">Connected as: <strong></strong></p>
+              
+              <div id="gmail-actions-disconnected">
+                <button class="button" id="gmail-connect-btn">Connect Gmail</button>
+              </div>
+              
+              <div id="gmail-actions-connected" class="hidden">
+                <button class="button button-outline" id="gmail-test-btn">Send Test Email</button>
+                <button class="button button-danger" id="gmail-disconnect-btn">Disconnect</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Other email integrations can be added here -->
+        </div>
+      </section>
+      
+      <!-- Other sections (targets, emails found, etc.) would go here -->
+    </main>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get elements
+      const gmailStatusBadge = document.getElementById('gmail-status-badge');
+      const gmailEmail = document.getElementById('gmail-email');
+      const gmailActionsDisconnected = document.getElementById('gmail-actions-disconnected');
+      const gmailActionsConnected = document.getElementById('gmail-actions-connected');
+      const gmailConnectBtn = document.getElementById('gmail-connect-btn');
+      const gmailTestBtn = document.getElementById('gmail-test-btn');
+      const gmailDisconnectBtn = document.getElementById('gmail-disconnect-btn');
+      const notificationsSection = document.getElementById('notifications');
+      
+      // Parse URL parameters for messages/errors
+      const urlParams = new URLSearchParams(window.location.search);
+      const message = urlParams.get('message');
+      const error = urlParams.get('error');
+      const clientId = urlParams.get('client_id') || 'default'; // Use 'default' if no client ID
+      
+      // Display notifications if present
+      if (message) {
+        showNotification(message, 'success');
+      }
+      if (error) {
+        showNotification(error, 'error');
+      }
+      
+      // Clean up URL parameters
+      if ((message || error) && window.history && window.history.replaceState) {
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+      
+      // Check Gmail connection status
+      checkGmailStatus();
+      
+      // Add event listeners
+      gmailConnectBtn.addEventListener('click', connectGmail);
+      gmailTestBtn.addEventListener('click', sendTestEmail);
+      gmailDisconnectBtn.addEventListener('click', disconnectGmail);
+      
+      // Function to check Gmail connection status
+      function checkGmailStatus() {
+        fetch(`/api/email-gmail/status?client_id=${clientId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.connected) {
+              // Update UI for connected state
+              gmailStatusBadge.textContent = 'Connected';
+              gmailStatusBadge.classList.remove('status-disconnected');
+              gmailStatusBadge.classList.add('status-connected');
+              
+              if (data.email) {
+                gmailEmail.querySelector('strong').textContent = data.email;
+                gmailEmail.classList.remove('hidden');
+              }
+              
+              gmailActionsDisconnected.classList.add('hidden');
+              gmailActionsConnected.classList.remove('hidden');
+            } else {
+              // Update UI for disconnected state
+              gmailStatusBadge.textContent = 'Disconnected';
+              gmailStatusBadge.classList.remove('status-connected');
+              gmailStatusBadge.classList.add('status-disconnected');
+              gmailEmail.classList.add('hidden');
+              gmailActionsDisconnected.classList.remove('hidden');
+              gmailActionsConnected.classList.add('hidden');
+              
+              if (data.error) {
+                showNotification(`Gmail connection error: ${data.error}`, 'error');
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error checking Gmail status:', error);
+            showNotification('Error checking Gmail connection status', 'error');
+          });
+      }
+      
+      // Function to connect Gmail
+      function connectGmail() {
+        window.location.href = `/api/email-gmail?client_id=${clientId}`;
+      }
+      
+      // Function to send test email
+      function sendTestEmail() {
+        const testEmailTo = prompt('Enter recipient email address for test:');
+        if (!testEmailTo) return;
+        
+        fetch('/api/email-gmail/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            client_id: clientId,
+            to: testEmailTo,
+            subject: 'Test Email from Email Finder',
+            body: '<h1>Test Email</h1><p>This is a test email sent from the Email Finder Gmail integration.</p>'
+          }),
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showNotification(`Test email sent successfully to ${testEmailTo}`, 'success');
+            } else {
+              showNotification(`Failed to send test email: ${data.error}`, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Error sending test email:', error);
+            showNotification('Error sending test email', 'error');
+          });
+      }
+      
+      // Function to disconnect Gmail
+      function disconnectGmail() {
+        if (!confirm('Are you sure you want to disconnect Gmail?')) return;
+        
+        fetch('/api/email-gmail/disconnect', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            client_id: clientId
+          }),
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showNotification('Gmail disconnected successfully', 'success');
+              checkGmailStatus(); // Refresh status
+            } else {
+              showNotification(`Failed to disconnect Gmail: ${data.error}`, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Error disconnecting Gmail:', error);
+            showNotification('Error disconnecting Gmail', 'error');
+          });
+      }
+      
+      // Function to show notifications
+      function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `card ${type === 'error' ? 'status-disconnected' : 'status-connected'}`;
+        notification.style.padding = '0.75rem 1rem';
+        notification.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>${message}</div>
+            <button class="dismiss-btn" style="background: none; border: none; cursor: pointer; font-size: 1.25rem;">&times;</button>
+          </div>
+        `;
+        
+        notification.querySelector('.dismiss-btn').addEventListener('click', function() {
+          notification.remove();
+        });
+        
+        notificationsSection.appendChild(notification);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+          notification.remove();
+        }, 5000);
+      }
+    });
+  </script>
+</body>
+</html> 
